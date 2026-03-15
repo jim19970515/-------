@@ -59,12 +59,64 @@ brunch-app/
 | **node_modules** | npm install 後套件實際存放的地方，不上傳 GitHub |
 | **PATH** | macOS terminal 找指令的路徑清單，找不到就報 command not found |
 
+## 本地開發架構
+
+```
+瀏覽器
+  │
+  ▼ port 8080
+nginx（反向代理）
+  ├── www.localhost:8080  →  Nuxt 官網     (port 3003)
+  ├── app.localhost:8080  →  Vue SPA       (port 5173)
+  └── api.localhost:8080  →  Backend API   (port 3000)
+```
+
+nginx 扮演「守門員」角色，根據子網域決定把請求轉給哪個服務。
+各服務本身繼續跑在自己的 port，不知道 nginx 的存在。
+
+### nginx 常用指令
+
+| 指令 | 說明 |
+|------|------|
+| `brew services start nginx` | 啟動 nginx（開機自動啟動） |
+| `brew services stop nginx` | 停止 nginx |
+| `brew services restart nginx` | 重新啟動（修改設定後執行） |
+| `nginx -t` | 測試設定檔語法是否正確 |
+| `nginx -s reload` | 重新載入設定（不中斷服務） |
+
+### nginx 設定檔位置
+
+| 檔案 | 說明 |
+|------|------|
+| `/opt/homebrew/etc/nginx/nginx.conf` | 主設定檔 |
+| `/opt/homebrew/etc/nginx/servers/xinxin.conf` | 本專案子網域設定 |
+
+### 修改設定的流程
+
+```bash
+# 1. 編輯設定檔
+# 2. 測試語法
+nginx -t
+# 3. 若通過，重新載入
+nginx -s reload
+```
+
 ## 如何啟動（本地開發）
 
 ### 前置需求
 - Node.js v20+
 - PostgreSQL（Postgres.app）
 - psql 加入 PATH（見下方）
+- nginx（`brew install nginx`）
+- Homebrew（https://brew.sh）
+
+### 設定子網域（只需做一次）
+```bash
+sudo sh -c 'echo "127.0.0.1  www.localhost" >> /etc/hosts'
+sudo sh -c 'echo "127.0.0.1  app.localhost" >> /etc/hosts'
+sudo sh -c 'echo "127.0.0.1  api.localhost" >> /etc/hosts'
+brew services start nginx
+```
 
 ### 設定 psql PATH（只需做一次）
 ```bash

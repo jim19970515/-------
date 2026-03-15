@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     public: {
       gtmId: process.env.GTM_ID ?? 'GTM-XXXXXXX',
       apiBase: process.env.API_BASE ?? 'http://localhost:3000',
+      appBase: process.env.APP_BASE ?? 'http://app.localhost:8080',
     },
   },
 

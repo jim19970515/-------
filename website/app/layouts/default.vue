@@ -1,12 +1,14 @@
 <script setup lang="ts">
 const mobileOpen = ref(false)
 const route = useRoute()
+const config = useRuntimeConfig()
+const appBase = config.public.appBase as string
 
-const navLinks = [
+const navLinks: { label: string; to?: string; href?: string }[] = [
   { label: '首頁', to: '/' },
   { label: '菜單', to: '/menu' },
   { label: '營業資訊', to: '/info' },
-  { label: '線上預訂', to: '/reservation' },
+  { label: '立即訂位', to: '/reservation' },
 ]
 
 watch(() => route.path, () => { mobileOpen.value = false })
@@ -25,22 +27,26 @@ watch(() => route.path, () => { mobileOpen.value = false })
 
         <!-- Desktop nav -->
         <nav class="hidden md:flex items-center gap-6">
-          <NuxtLink
-            v-for="link in navLinks"
-            :key="link.to"
-            :to="link.to"
-            class="text-sm font-medium text-gray-600 hover:text-amber-700 transition-colors"
-            active-class="text-amber-700 font-semibold"
-            exact-active-class="text-amber-700 font-semibold"
-          >
-            {{ link.label }}
-          </NuxtLink>
-          <NuxtLink
-            to="/reservation"
+          <template v-for="link in navLinks" :key="link.to ?? link.href">
+            <a
+              v-if="link.href"
+              :href="link.href"
+              class="text-sm font-medium text-gray-600 hover:text-amber-700 transition-colors"
+            >{{ link.label }}</a>
+            <NuxtLink
+              v-else
+              :to="link.to ?? ''"
+              class="text-sm font-medium text-gray-600 hover:text-amber-700 transition-colors"
+              active-class="text-amber-700 font-semibold"
+              exact-active-class="text-amber-700 font-semibold"
+            >{{ link.label }}</NuxtLink>
+          </template>
+          <a
+            :href="`${appBase}/`"
             class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
           >
-            立即預訂
-          </NuxtLink>
+            即刻點餐
+          </a>
         </nav>
 
         <!-- Mobile hamburger -->
@@ -60,15 +66,19 @@ watch(() => route.path, () => { mobileOpen.value = false })
 
       <!-- Mobile menu -->
       <div v-if="mobileOpen" class="md:hidden border-t border-stone-100 bg-white px-4 py-3 flex flex-col gap-3">
-        <NuxtLink
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          class="py-2 text-sm font-medium text-gray-700 border-b border-stone-50"
-          active-class="text-amber-700"
-        >
-          {{ link.label }}
-        </NuxtLink>
+        <template v-for="link in navLinks" :key="link.to ?? link.href">
+          <a
+            v-if="link.href"
+            :href="link.href"
+            class="py-2 text-sm font-medium text-gray-700 border-b border-stone-50"
+          >{{ link.label }}</a>
+          <NuxtLink
+            v-else
+            :to="link.to ?? ''"
+            class="py-2 text-sm font-medium text-gray-700 border-b border-stone-50"
+            active-class="text-amber-700"
+          >{{ link.label }}</NuxtLink>
+        </template>
       </div>
     </header>
 
@@ -87,10 +97,9 @@ watch(() => route.path, () => { mobileOpen.value = false })
         <div>
           <p class="font-semibold text-white mb-2 text-sm">快速連結</p>
           <ul class="space-y-1">
-            <li v-for="link in navLinks" :key="link.to">
-              <NuxtLink :to="link.to" class="text-sm text-amber-300 hover:text-white transition-colors">
-                {{ link.label }}
-              </NuxtLink>
+            <li v-for="link in navLinks" :key="link.to ?? link.href">
+              <a v-if="link.href" :href="link.href" class="text-sm text-amber-300 hover:text-white transition-colors">{{ link.label }}</a>
+              <NuxtLink v-else :to="link.to ?? ''" class="text-sm text-amber-300 hover:text-white transition-colors">{{ link.label }}</NuxtLink>
             </li>
           </ul>
         </div>
@@ -102,6 +111,9 @@ watch(() => route.path, () => { mobileOpen.value = false })
         </div>
       </div>
       <p class="text-center text-xs text-amber-600 mt-8">© 2026 心心精緻早午餐. All rights reserved.</p>
+      <div class="text-center mt-3">
+        <NuxtLink to="/staff" class="text-xs text-amber-800/50 hover:text-amber-600 transition-colors">員工入口</NuxtLink>
+      </div>
     </footer>
   </div>
 </template>

@@ -8,6 +8,7 @@ useSeoMeta({
 })
 
 const config = useRuntimeConfig()
+const appBase = config.public.appBase as string
 
 interface MenuItem {
   id: number
@@ -64,13 +65,13 @@ const { trackClick } = useGtm()
         >
           查看菜單
         </NuxtLink>
-        <NuxtLink
-          to="/reservation"
+        <a
+          :href="appBase"
           class="bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-3 rounded-full border border-white/30 transition-colors"
-          @click="trackClick('hero_reservation', '立即預訂')"
+          @click="trackClick('hero_order', '立即點餐')"
         >
-          立即預訂
-        </NuxtLink>
+          立即點餐
+        </a>
       </div>
     </div>
 
@@ -146,12 +147,12 @@ const { trackClick } = useGtm()
   <section class="py-16 px-4 bg-amber-800 text-center">
     <h2 class="text-2xl font-bold text-white mb-3">準備好開始美好的一天了嗎？</h2>
     <p class="text-amber-200 text-sm mb-8">線上預訂，免去等候時間</p>
-    <NuxtLink
-      to="/reservation"
+    <a
+      :href="appBase"
       class="inline-block bg-white text-amber-800 font-bold px-10 py-3 rounded-full hover:bg-amber-50 transition-colors shadow-lg"
-      @click="trackClick('cta_reservation', '立即線上預訂')"
+      @click="trackClick('cta_order', '立即線上點餐')"
     >
-      立即線上預訂
-    </NuxtLink>
+      立即線上點餐
+    </a>
   </section>
 </template>
