@@ -63,6 +63,13 @@ model Banner {
   createdAt DateTime @default(now())
 }
 
+model Table {
+  id        Int      @id @default(autoincrement())
+  label     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   ADMIN
   STAFF

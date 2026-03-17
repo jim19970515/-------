@@ -73,6 +73,10 @@ async function handleReLogin() {
           <el-icon><Picture /></el-icon>
           <span>輪播 Banner</span>
         </el-menu-item>
+        <el-menu-item index="/admin/tables">
+          <el-icon><Grid /></el-icon>
+          <span>桌號管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

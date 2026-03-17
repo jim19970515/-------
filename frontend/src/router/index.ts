@@ -37,6 +37,10 @@ const router = createRouter({
           path: 'banners',
           component: () => import('@/views/admin/BannersView.vue'),
         },
+        {
+          path: 'tables',
+          component: () => import('@/views/admin/TablesView.vue'),
+        },
       ],
     },
     {

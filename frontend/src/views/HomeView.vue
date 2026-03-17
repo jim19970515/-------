@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/composables/useApi'
+import type { Table } from '@/types/table'
 
 const router = useRouter()
-const tableNo = ref('')
-const error = ref('')
+const tables = ref<Table[]>([])
 
-function goOrder() {
-  const val = tableNo.value.trim()
-  if (!val) {
-    error.value = '請輸入桌號'
-    return
-  }
-  router.push(`/customer/${val}`)
-}
+onMounted(async () => {
+  const { data } = await api.get<Table[]>('/api/tables')
+  tables.value = data
+})
 </script>
 
 <template>
@@ -23,30 +20,30 @@ function goOrder() {
     <div class="text-center mb-10">
       <img src="@/assets/logo.png" alt="logo" class="h-20 w-20 rounded-full object-cover mx-auto shadow-md mb-4" />
       <h1 class="text-3xl font-bold text-amber-800">心心精緻早午餐</h1>
-      <p class="text-amber-500 mt-1 text-sm">請選擇使用身份</p>
     </div>
 
-    <!-- 顧客點餐 -->
-    <div class="w-full max-w-sm bg-white rounded-3xl shadow-sm p-6 mb-6">
+    <!-- 桌號選擇 -->
+    <div class="w-full max-w-sm bg-white rounded-3xl shadow-sm p-6">
       <div class="flex items-center gap-2 mb-4">
         <span class="text-2xl">🍽</span>
-        <h2 class="font-bold text-gray-700 text-lg">顧客點餐</h2>
+        <h2 class="font-bold text-gray-700 text-lg">請選擇桌號</h2>
       </div>
-      <input
-        v-model="tableNo"
-        placeholder="輸入桌號（例如 A1）"
-        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-700 outline-none focus:border-amber-400 mb-2"
-        @keydown.enter="goOrder"
-      />
-      <p v-if="error" class="text-red-400 text-sm mb-2">{{ error }}</p>
-      <button
-        class="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl py-3 font-semibold transition-colors"
-        @click="goOrder"
-      >
-        開始點餐
-      </button>
-    </div>
 
+      <div v-if="tables.length === 0" class="text-center text-gray-400 py-6 text-sm">
+        尚未設定桌號，請聯繫店家
+      </div>
+
+      <div v-else class="grid grid-cols-3 gap-3">
+        <button
+          v-for="table in tables"
+          :key="table.id"
+          class="aspect-square flex items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 font-bold text-lg hover:bg-amber-400 hover:text-white hover:border-amber-400 active:bg-amber-500 transition-all"
+          @click="router.push(`/customer/${table.label}`)"
+        >
+          {{ table.label }}
+        </button>
+      </div>
+    </div>
 
   </div>
 </template>
