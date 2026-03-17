@@ -47,33 +47,6 @@ function goOrder() {
       </button>
     </div>
 
-    <!-- 店員區塊 -->
-    <div class="w-full max-w-sm">
-      <p class="text-xs text-gray-400 text-center mb-3">店員 / 廚房專區</p>
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          class="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-5 shadow-sm hover:shadow-md hover:border-amber-200 transition-all"
-          @click="router.push('/admin/orders')"
-        >
-          <span class="text-2xl">🖥</span>
-          <span class="text-sm font-medium text-gray-600">後台管理</span>
-        </button>
-        <button
-          class="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-5 shadow-sm hover:shadow-md hover:border-amber-200 transition-all"
-          @click="router.push('/pos')"
-        >
-          <span class="text-2xl">💳</span>
-          <span class="text-sm font-medium text-gray-600">POS 結帳</span>
-        </button>
-        <button
-          class="col-span-2 flex items-center justify-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm hover:shadow-md hover:border-amber-200 transition-all"
-          @click="router.push('/kds')"
-        >
-          <span class="text-2xl">👨‍🍳</span>
-          <span class="text-sm font-medium text-gray-600">廚房出餐系統（KDS）</span>
-        </button>
-      </div>
-    </div>
 
   </div>
 </template>

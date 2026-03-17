@@ -41,7 +41,6 @@ const router = createRouter({
     },
     {
       path: '/pos',
-      meta: { requiresAuth: true },
       component: () => import('@/views/pos/PosView.vue'),
     },
     {
