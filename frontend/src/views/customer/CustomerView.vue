@@ -19,7 +19,7 @@ const showCart = ref(false)
 const submitting = ref(false)
 const submitted = ref(false)
 
-const orderType = ref<'dine-in' | 'takeout'>('dine-in')
+const orderType = ref<'dine-in' | 'takeout'>(tableNo === '外帶' ? 'takeout' : 'dine-in')
 const needUtensils = ref(false)
 
 const submitTableNo = computed(() => {
