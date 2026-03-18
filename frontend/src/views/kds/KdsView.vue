@@ -1,11 +1,44 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '@/composables/useApi'
 import { useNotify } from '@/composables/useNotify'
 import { useSocket } from '@/composables/useSocket'
 import type { Order } from '@/types/order'
 
 const notify = useNotify()
+
+// PIN 鎖
+const CORRECT_PIN = '1234'
+const PIN_SESSION_KEY = 'kds_unlocked'
+const unlocked = ref(sessionStorage.getItem(PIN_SESSION_KEY) === 'true')
+const pinInput = ref('')
+const pinError = ref(false)
+const pinDots = computed(() => Array.from({ length: 4 }, (_, i) => i < pinInput.value.length))
+
+function pressKey(key: string) {
+  if (pinInput.value.length >= 4) return
+  pinInput.value += key
+  pinError.value = false
+  if (pinInput.value.length === 4) {
+    if (pinInput.value === CORRECT_PIN) {
+      sessionStorage.setItem(PIN_SESSION_KEY, 'true')
+      unlocked.value = true
+      startKds()
+    } else {
+      pinError.value = true
+      setTimeout(() => {
+        pinInput.value = ''
+        pinError.value = false
+      }, 600)
+    }
+  }
+}
+
+function pressDelete() {
+  pinInput.value = pinInput.value.slice(0, -1)
+  pinError.value = false
+}
+
 const orders = ref<Order[]>([])
 const now = ref(Date.now())
 const actionLoading = ref<Record<number, boolean>>({})
@@ -109,12 +142,16 @@ let clockTimer: ReturnType<typeof setInterval>
 const socket = useSocket()
 let pollTimer: ReturnType<typeof setInterval>
 
-onMounted(() => {
+function startKds() {
   fetchOrders()
   clockTimer = setInterval(() => { now.value = Date.now() }, 1000)
   socket.on('order:new', fetchOrders)
   socket.on('order:updated', fetchOrders)
   pollTimer = setInterval(fetchOrders, 60000)
+}
+
+onMounted(() => {
+  if (unlocked.value) startKds()
 })
 
 onUnmounted(() => {
@@ -126,7 +163,55 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col" style="background: #121212">
+  <!-- PIN 鎖畫面 -->
+  <div
+    v-if="!unlocked"
+    class="fixed inset-0 flex flex-col items-center justify-center"
+    style="background: #121212"
+  >
+    <img src="@/assets/logo.png" alt="logo" class="h-16 w-16 rounded-full object-cover mb-2" />
+    <h1 class="text-white font-bold text-xl mb-1">心心精緻早午餐</h1>
+    <p class="text-sm mb-10" style="color: #666">廚房顯示系統</p>
+
+    <div class="flex gap-4 mb-8" :class="{ shake: pinError }">
+      <div
+        v-for="(filled, i) in pinDots"
+        :key="i"
+        class="w-4 h-4 rounded-full border-2 transition-all"
+        :class="pinError ? 'border-red-400 bg-red-400' : filled ? 'border-white bg-white' : 'border-white/40'"
+      />
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 w-64">
+      <button
+        v-for="n in [1,2,3,4,5,6,7,8,9]"
+        :key="n"
+        class="h-16 rounded-2xl text-white text-2xl font-light transition-all active:scale-95"
+        style="background: rgba(255,255,255,0.1)"
+        @click="pressKey(String(n))"
+      >
+        {{ n }}
+      </button>
+      <div />
+      <button
+        class="h-16 rounded-2xl text-white text-2xl font-light transition-all active:scale-95"
+        style="background: rgba(255,255,255,0.1)"
+        @click="pressKey('0')"
+      >
+        0
+      </button>
+      <button
+        class="h-16 rounded-2xl text-white text-xl transition-all active:scale-95"
+        style="background: rgba(255,255,255,0.05)"
+        @click="pressDelete"
+      >
+        ⌫
+      </button>
+    </div>
+  </div>
+
+  <!-- KDS 主畫面 -->
+  <div v-else class="h-screen flex flex-col" style="background: #121212">
 
     <!-- Header -->
     <div class="shrink-0 flex items-center justify-between px-6 py-4" style="background: #1E1E1E; border-bottom: 1px solid #333">
