@@ -60,6 +60,21 @@ async function handleSubmit() {
   }
 }
 
+async function handleAddCategory() {
+  try {
+    const { value: name } = await ElMessageBox.prompt('輸入分類名稱', '新增分類', {
+      confirmButtonText: '新增',
+      cancelButtonText: '取消',
+      inputValidator: (v) => !!v.trim() || '名稱不能為空',
+    })
+    await api.post('/api/menu/categories', { name: name.trim() })
+    notify.success(`分類「${name.trim()}」已新增`)
+    fetchMenu()
+  } catch {
+    // 取消不處理
+  }
+}
+
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('確定要刪除這個品項嗎？', '確認刪除', { type: 'warning' })
   try {
@@ -78,7 +93,10 @@ onMounted(fetchMenu)
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-semibold">菜單管理</h1>
-      <el-button type="primary" @click="openCreate">+ 新增品項</el-button>
+      <div class="flex gap-2">
+        <el-button @click="handleAddCategory">+ 新增分類</el-button>
+        <el-button type="primary" @click="openCreate">+ 新增品項</el-button>
+      </div>
     </div>
 
     <div v-for="category in categories" :key="category.id" class="mb-8">
