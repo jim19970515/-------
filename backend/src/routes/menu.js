@@ -3,6 +3,7 @@ const router = express.Router()
 const { authenticate } = require('../middleware/auth')
 const {
   getMenu,
+  getMenuAll,
   createCategory,
   createItem,
   updateItem,
@@ -10,6 +11,7 @@ const {
 } = require('../controllers/menu')
 
 router.get('/', getMenu)                              // 公開
+router.get('/all', authenticate, getMenuAll)          // 後台，含下架
 router.post('/categories', authenticate, createCategory)  // 需登入
 router.post('/items', authenticate, createItem)           // 需登入
 router.put('/items/:id', authenticate, updateItem)        // 需登入

@@ -12,6 +12,14 @@ const getMenu = async (req, res) => {
   res.json(categories)
 }
 
+// GET /api/menu/all - 後台用，含下架品項
+const getMenuAll = async (req, res) => {
+  const categories = await prisma.category.findMany({
+    include: { items: { orderBy: { id: 'asc' } } },
+  })
+  res.json(categories)
+}
+
 // POST /api/menu/categories - 新增分類
 const createCategory = async (req, res) => {
   const { name } = req.body
@@ -46,4 +54,4 @@ const deleteItem = async (req, res) => {
   res.status(204).send()
 }
 
-module.exports = { getMenu, createCategory, createItem, updateItem, deleteItem }
+module.exports = { getMenu, getMenuAll, createCategory, createItem, updateItem, deleteItem }

@@ -20,7 +20,7 @@ const form = ref<MenuItemPayload>({
 })
 
 async function fetchMenu() {
-  const { data } = await api.get<Category[]>('/api/menu')
+  const { data } = await api.get<Category[]>('/api/menu/all')
   categories.value = data
 }
 
