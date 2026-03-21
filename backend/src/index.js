@@ -13,7 +13,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:5173', 'http://app.localhost:8080', 'http://www.localhost:8080']
 
-app.use(cors({ origin: allowedOrigins }))
+const corsOptions = { origin: allowedOrigins, credentials: true }
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.json())
 
 app.use('/api/auth', require('./routes/auth'))
