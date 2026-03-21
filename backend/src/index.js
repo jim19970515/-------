@@ -25,6 +25,7 @@ app.use('/api/reports', require('./routes/reports'))
 app.use('/api/banners', require('./routes/banners'))
 app.use('/api/tables', require('./routes/tables'))
 app.use('/api/upload', require('./routes/upload'))
+app.use('/api/assistant', require('./routes/assistant'))
 
 app.get('/', (req, res) => {
   res.json({ message: 'Brunch API is running' })

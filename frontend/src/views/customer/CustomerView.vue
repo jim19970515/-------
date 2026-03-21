@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Autoplay, Pagination } from 'swiper/modules'
@@ -9,6 +9,8 @@ import api from '@/composables/useApi'
 import { useCartStore } from '@/stores/cart'
 import type { Category } from '@/types/menu'
 import type { Banner } from '@/types/banner'
+import AiAssistantChat from '@/components/customer/AiAssistantChat.vue'
+import type { SuggestedItem } from '@/composables/useAiAssistant'
 
 const route = useRoute()
 const cart = useCartStore()
@@ -21,6 +23,20 @@ const submitted = ref(false)
 const activeCategory = ref<number | null>(null)
 
 const orderType = ref<'dine-in' | 'takeout'>(tableNo === '外帶' ? 'takeout' : 'dine-in')
+const showAssistant = ref(false)
+
+watch([showAssistant, showCart], ([assistant, cart]) => {
+  document.body.style.overflow = assistant || cart ? 'hidden' : ''
+})
+
+function handleAiAddItems(items: SuggestedItem[]) {
+  const allItems = categories.value.flatMap((c) => c.items)
+  for (const suggested of items) {
+    const menuItem = allItems.find((i) => i.id === suggested.menuItemId)
+    if (menuItem) cart.addItem(menuItem)
+  }
+  showAssistant.value = false
+}
 const needUtensils = ref(false)
 
 const submitTableNo = computed(() => {
@@ -244,6 +260,25 @@ onMounted(() => {
           <span>NT$ {{ cart.totalPrice }}</span>
         </button>
       </div>
+    </Transition>
+
+    <!-- AI 助理浮動按鈕 -->
+    <button
+      v-if="!showCart && !showAssistant"
+      class="fixed bottom-24 right-4 z-25 w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg"
+      style="background: linear-gradient(135deg, #FF9800, #E65100); box-shadow: 0 4px 16px rgba(230,81,0,0.4)"
+      @click="showAssistant = true"
+    >
+      🤖
+    </button>
+
+    <!-- AI 助理聊天介面 -->
+    <Transition name="slide-up">
+      <AiAssistantChat
+        v-if="showAssistant"
+        @add-items="handleAiAddItems"
+        @close="showAssistant = false"
+      />
     </Transition>
 
     <!-- 購物車全屏 -->
