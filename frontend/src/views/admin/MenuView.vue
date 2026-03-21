@@ -75,6 +75,15 @@ async function handleAddCategory() {
   }
 }
 
+async function handleToggleAvailable(item: MenuItem) {
+  try {
+    await api.put(`/api/menu/items/${item.id}`, { ...item, price: parseFloat(item.price), isAvailable: !item.isAvailable })
+    fetchMenu()
+  } catch {
+    notify.error('操作失敗')
+  }
+}
+
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('確定要刪除這個品項嗎？', '確認刪除', { type: 'warning' })
   try {
@@ -114,9 +123,12 @@ onMounted(fetchMenu)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="220">
           <template #default="{ row }">
             <el-button size="small" @click="openEdit(row)">編輯</el-button>
+            <el-button size="small" :type="row.isAvailable ? 'warning' : 'success'" @click="handleToggleAvailable(row)">
+              {{ row.isAvailable ? '下架' : '上架' }}
+            </el-button>
             <el-button size="small" type="danger" @click="handleDelete(row.id)">刪除</el-button>
           </template>
         </el-table-column>
