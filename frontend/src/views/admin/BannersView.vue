@@ -12,6 +12,26 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const saving = ref(false)
 const editingId = ref<number | null>(null)
+const uploading = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+async function handleFileUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  uploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const { data } = await api.post<{ url: string }>('/api/upload', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    form.value.imageUrl = data.url
+  } catch {
+    notify.error('上傳失敗')
+  } finally {
+    uploading.value = false
+  }
+}
 
 const form = ref<BannerPayload>({
   imageUrl: '',
@@ -203,8 +223,12 @@ onMounted(fetchBanners)
       width="500px"
     >
       <el-form label-position="top" @submit.prevent="save">
-        <el-form-item label="圖片網址" required>
-          <el-input v-model="form.imageUrl" placeholder="https://..." />
+        <el-form-item label="圖片" required>
+          <div class="flex gap-2 w-full">
+            <el-input v-model="form.imageUrl" placeholder="貼上圖片網址，或從本機上傳" class="flex-1" />
+            <el-button :loading="uploading" @click="fileInput?.click()">上傳圖片</el-button>
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
+          </div>
           <!-- 預覽 -->
           <div
             v-if="form.imageUrl"

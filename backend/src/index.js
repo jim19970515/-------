@@ -16,6 +16,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 const corsOptions = { origin: allowedOrigins, credentials: true }
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use('/uploads', require('express').static(require('path').join(__dirname, '../public/uploads')))
 
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/menu', require('./routes/menu'))
@@ -23,6 +24,7 @@ app.use('/api/orders', require('./routes/orders'))
 app.use('/api/reports', require('./routes/reports'))
 app.use('/api/banners', require('./routes/banners'))
 app.use('/api/tables', require('./routes/tables'))
+app.use('/api/upload', require('./routes/upload'))
 
 app.get('/', (req, res) => {
   res.json({ message: 'Brunch API is running' })
