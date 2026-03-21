@@ -10,6 +10,7 @@
 | 前台 UI | Tailwind CSS | 顧客點餐介面樣式 |
 | 後台 UI | Element Plus | 管理後台與 POS 介面元件 |
 | 後端 | Node.js + Express | HTTP 伺服器與 API |
+| AI 助理 | Claude API（預留介面） | 自然語言點餐，目前為 mock 關鍵字比對 |
 | 資料庫 | PostgreSQL | 關聯式資料庫 |
 | ORM | Prisma | 用 JS 操作資料庫，不用直接寫 SQL |
 | 身份驗證 | JWT | 登入後取得 token，用來驗證身份 |
@@ -68,7 +69,7 @@ brunch-app/
 nginx（反向代理）
   ├── www.localhost:8080  →  Nuxt 官網     (port 3003)
   ├── app.localhost:8080  →  Vue SPA       (port 5173)
-  └── api.localhost:8080  →  Backend API   (port 3000)
+  └── api.localhost:8080  →  Backend API   (port 3001)
 ```
 
 nginx 扮演「守門員」角色，根據子網域決定把請求轉給哪個服務。
@@ -134,7 +135,7 @@ psql -U jim -c "CREATE DATABASE brunch_db;"
 cd backend
 npm install
 npx prisma migrate dev --name init   # 建立資料表
-npm run dev                           # 啟動伺服器（port 3000）
+npm run dev                           # 啟動伺服器（port 3001）
 ```
 
 ### 啟動前端
@@ -143,6 +144,12 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### 設定前端本地環境變數（只需做一次）
+```bash
+echo 'VITE_API_BASE=http://api.localhost:8080' > frontend/.env.local
+```
+> `.env.local` 不會上傳 GitHub，每台機器都要自己建。
 
 ## 測試帳號
 
@@ -177,3 +184,25 @@ npm run dev
 | Method | Path | 說明 | 需要登入 |
 |--------|------|------|----------|
 | GET | `/api/reports/today` | 今日營收與熱門品項 | 是 |
+
+### AI 點餐助理
+| Method | Path | 說明 | 需要登入 |
+|--------|------|------|----------|
+| POST | `/api/assistant/chat` | 自然語言點餐，回傳建議品項 | 否 |
+
+**Request body：**
+```json
+{ "message": "我想吃套餐" }
+```
+
+**Response：**
+```json
+{
+  "reply": "以下幾項符合你的需求：「心心招牌早午餐」、「美式大份量早午餐」",
+  "suggestedItems": [
+    { "menuItemId": 3, "quantity": 1, "name": "心心招牌早午餐", "price": "320" }
+  ]
+}
+```
+
+> 目前使用關鍵字比對（mock），未來可替換為 Claude API function calling。
