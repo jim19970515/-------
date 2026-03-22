@@ -7,6 +7,7 @@ import 'swiper/css'
 import 'swiper/css/pagination'
 import api from '@/composables/useApi'
 import { useCartStore } from '@/stores/cart'
+import { useCustomerAuthStore } from '@/stores/customerAuth'
 import type { Category } from '@/types/menu'
 import type { Banner } from '@/types/banner'
 import AiAssistantChat from '@/components/customer/AiAssistantChat.vue'
@@ -14,6 +15,39 @@ import type { SuggestedItem } from '@/composables/useAiAssistant'
 
 const route = useRoute()
 const cart = useCartStore()
+const customerAuth = useCustomerAuthStore()
+
+// ── 登入 / 手機號碼 ──────────────────────────────
+const loginLoading = ref(false)
+const phoneInput = ref('')
+const phoneLoading = ref(false)
+
+async function handleGoogleLogin(response: { credential: string }) {
+  loginLoading.value = true
+  try {
+    const { data } = await api.post('/api/customer/google', { credential: response.credential })
+    customerAuth.setAuth(data.token, data.customer)
+  } catch {
+    alert('登入失敗，請再試一次')
+  } finally {
+    loginLoading.value = false
+  }
+}
+
+async function savePhone() {
+  if (!phoneInput.value.trim()) return
+  phoneLoading.value = true
+  try {
+    const { data } = await api.put('/api/customer/profile', { phone: phoneInput.value.trim() }, {
+      headers: { 'x-customer-token': customerAuth.token! },
+    })
+    customerAuth.updateCustomer(data)
+  } catch {
+    alert('儲存失敗，請再試一次')
+  } finally {
+    phoneLoading.value = false
+  }
+}
 
 const tableNo = route.params['tableNo'] as string
 const categories = ref<Category[]>([])
@@ -91,6 +125,8 @@ async function submitOrder() {
         quantity: i.quantity,
         unitPrice: parseFloat(i.menuItem.price),
       })),
+    }, {
+      headers: customerAuth.token ? { 'x-customer-token': customerAuth.token } : {},
     })
     cart.clear()
     showCart.value = false
@@ -98,6 +134,10 @@ async function submitOrder() {
   } finally {
     submitting.value = false
   }
+}
+
+function onImgError(e: Event) {
+  (e.target as HTMLImageElement).style.display = 'none'
 }
 
 onMounted(() => {
@@ -119,6 +159,58 @@ onMounted(() => {
     >
       繼續點餐
     </button>
+  </div>
+
+  <!-- 登入畫面 -->
+  <div
+    v-else-if="!customerAuth.isLoggedIn"
+    class="min-h-screen flex flex-col items-center justify-center px-8 gap-6"
+    style="background: #FFF8F0"
+  >
+    <img src="@/assets/logo.png" alt="logo" class="w-20 h-20 rounded-full object-cover shadow" />
+    <div class="text-center">
+      <h1 class="text-xl font-bold" style="color: #3E2723">心心精緻早午餐</h1>
+      <p class="text-sm mt-1" style="color: #BCAAA4">請先登入以繼續點餐</p>
+    </div>
+    <GoogleLogin
+      :callback="handleGoogleLogin"
+      :button-config="{ theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill', width: 280 }"
+    />
+    <p class="text-xs text-center" style="color: #BCAAA4">登入即代表您同意本店蒐集基本個人資料用於訂餐服務</p>
+  </div>
+
+  <!-- 填寫手機號碼 -->
+  <div
+    v-else-if="customerAuth.needsPhone"
+    class="min-h-screen flex flex-col items-center justify-center px-8 gap-5"
+    style="background: #FFF8F0"
+  >
+    <div class="text-center">
+      <p class="text-4xl mb-3">📱</p>
+      <h2 class="text-lg font-bold" style="color: #3E2723">最後一步！填入手機號碼</h2>
+      <p class="text-sm mt-1" style="color: #BCAAA4">方便店家在訂單有異動時與您聯繫</p>
+    </div>
+    <div class="w-full max-w-xs flex flex-col gap-3">
+      <input
+        v-model="phoneInput"
+        type="tel"
+        placeholder="0912-345-678"
+        class="w-full rounded-xl px-4 py-3 text-sm border outline-none"
+        style="border-color: #E8DDD6; color: #3E2723"
+        @keyup.enter="savePhone"
+      />
+      <button
+        class="w-full rounded-xl py-3 font-semibold text-white disabled:opacity-40"
+        style="background: linear-gradient(135deg, #FF9800, #E65100)"
+        :disabled="!phoneInput.trim() || phoneLoading"
+        @click="savePhone"
+      >
+        {{ phoneLoading ? '儲存中...' : '完成註冊，開始點餐 →' }}
+      </button>
+      <button class="text-xs text-center" style="color: #BCAAA4" @click="customerAuth.logout()">
+        切換帳號
+      </button>
+    </div>
   </div>
 
   <!-- 點餐主頁 -->
@@ -207,34 +299,51 @@ onMounted(() => {
           <div
             v-for="item in availableItems(category)"
             :key="item.id"
-            class="flex items-center gap-3 rounded-2xl px-4 py-3"
+            class="flex gap-3 rounded-2xl overflow-hidden"
             style="background: white; box-shadow: 0 1px 6px rgba(0,0,0,0.05)"
           >
-            <!-- 品項資訊 -->
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold text-sm" style="color: #3E2723">{{ item.name }}</p>
-              <p v-if="item.description" class="text-xs mt-0.5 truncate" style="color: #BCAAA4">{{ item.description }}</p>
-              <p class="text-sm font-bold mt-1" style="color: #E65100">NT$ {{ parseFloat(item.price) }}</p>
+            <!-- 縮圖 / 佔位 -->
+            <div
+              class="shrink-0 w-24 h-24 flex items-center justify-center overflow-hidden"
+              style="background: #F5EDE6"
+            >
+              <img
+                v-if="item.image"
+                :src="item.image"
+                :alt="item.name"
+                class="w-full h-full object-cover"
+                @error="onImgError"
+              />
+              <span v-else class="text-xs select-none" style="color: #BCAAA4">暫無圖片</span>
             </div>
 
-            <!-- 加減 -->
-            <div class="flex items-center gap-2 shrink-0">
-              <Transition name="pop">
+            <!-- 品項資訊 + 加減 -->
+            <div class="flex flex-1 items-center gap-3 px-4 py-3 min-w-0">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm" style="color: #3E2723">{{ item.name }}</p>
+                <p v-if="item.description" class="text-xs mt-0.5 truncate" style="color: #BCAAA4">{{ item.description }}</p>
+                <p class="text-sm font-bold mt-1" style="color: #E65100">NT$ {{ parseFloat(item.price) }}</p>
+              </div>
+
+              <!-- 加減 -->
+              <div class="flex items-center gap-2 shrink-0">
+                <Transition name="pop">
+                  <button
+                    v-if="getQuantityInCart(item.id) > 0"
+                    class="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold"
+                    style="background: #F0EBE6; color: #E65100"
+                    @click="cart.removeItem(item.id)"
+                  >−</button>
+                </Transition>
+                <span v-if="getQuantityInCart(item.id) > 0" class="w-5 text-center text-sm font-bold" style="color: #3E2723">
+                  {{ getQuantityInCart(item.id) }}
+                </span>
                 <button
-                  v-if="getQuantityInCart(item.id) > 0"
-                  class="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold"
-                  style="background: #F0EBE6; color: #E65100"
-                  @click="cart.removeItem(item.id)"
-                >−</button>
-              </Transition>
-              <span v-if="getQuantityInCart(item.id) > 0" class="w-5 text-center text-sm font-bold" style="color: #3E2723">
-                {{ getQuantityInCart(item.id) }}
-              </span>
-              <button
-                class="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold text-white"
-                style="background: linear-gradient(135deg, #FF9800, #E65100)"
-                @click="cart.addItem(item)"
-              >+</button>
+                  class="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold text-white"
+                  style="background: linear-gradient(135deg, #FF9800, #E65100)"
+                  @click="cart.addItem(item)"
+                >+</button>
+              </div>
             </div>
           </div>
         </div>

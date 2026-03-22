@@ -39,6 +39,7 @@ const createOrder = async (req, res) => {
       orderNo,
       tableNo,
       totalPrice,
+      ...(req.customerId ? { customerId: req.customerId } : {}),
       items: {
         create: items.map((item) => {
           const menuItem = menuItems.find((m) => m.id === item.menuItemId)

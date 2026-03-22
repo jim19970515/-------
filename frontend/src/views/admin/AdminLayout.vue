@@ -77,6 +77,10 @@ async function handleReLogin() {
           <el-icon><Grid /></el-icon>
           <span>桌號管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/customers">
+          <el-icon><User /></el-icon>
+          <span>會員管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

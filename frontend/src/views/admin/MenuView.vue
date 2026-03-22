@@ -11,12 +11,34 @@ const dialogVisible = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
 
+const uploading = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+async function handleFileUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  uploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const { data } = await api.post<{ url: string }>('/api/upload', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    form.value.image = data.url
+  } catch {
+    notify.error('上傳失敗')
+  } finally {
+    uploading.value = false
+  }
+}
+
 const form = ref<MenuItemPayload>({
   name: '',
   price: 0,
   description: '',
   categoryId: 0,
   isAvailable: true,
+  image: '',
 })
 
 async function fetchMenu() {
@@ -27,7 +49,7 @@ async function fetchMenu() {
 function openCreate() {
   isEditing.value = false
   editingId.value = null
-  form.value = { name: '', price: 0, description: '', categoryId: categories.value[0]?.id ?? 0, isAvailable: true }
+  form.value = { name: '', price: 0, description: '', categoryId: categories.value[0]?.id ?? 0, isAvailable: true, image: '' }
   dialogVisible.value = true
 }
 
@@ -40,6 +62,7 @@ function openEdit(item: MenuItem) {
     description: item.description ?? '',
     categoryId: item.categoryId,
     isAvailable: item.isAvailable,
+    image: item.image ?? '',
   }
   dialogVisible.value = true
 }
@@ -137,6 +160,16 @@ onMounted(fetchMenu)
 
     <el-dialog v-model="dialogVisible" :title="isEditing ? '編輯品項' : '新增品項'" width="500px">
       <el-form :model="form" label-position="top">
+        <el-form-item label="圖片（選填）">
+          <div class="flex gap-2 w-full">
+            <el-input v-model="form.image" placeholder="貼上圖片網址，或從本機上傳" class="flex-1" />
+            <el-button :loading="uploading" @click="fileInput?.click()">上傳圖片</el-button>
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
+          </div>
+          <div v-if="form.image" class="mt-2 rounded-xl overflow-hidden w-32 h-20">
+            <img :src="form.image" class="w-full h-full object-cover" />
+          </div>
+        </el-form-item>
         <el-form-item label="品項名稱">
           <el-input v-model="form.name" />
         </el-form-item>

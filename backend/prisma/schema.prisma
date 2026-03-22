@@ -33,6 +33,17 @@ model MenuItem {
   orderItems  OrderItem[]
 }
 
+model Customer {
+  id        Int      @id @default(autoincrement())
+  googleId  String   @unique
+  email     String   @unique
+  name      String
+  phone     String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
 model Order {
   id         Int         @id @default(autoincrement())
   orderNo    String      @unique
@@ -40,6 +51,8 @@ model Order {
   status     OrderStatus @default(PENDING)
   totalPrice Decimal
   createdAt  DateTime    @default(now())
+  customerId Int?
+  customer   Customer?   @relation(fields: [customerId], references: [id])
   items      OrderItem[]
 }
 

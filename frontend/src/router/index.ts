@@ -41,6 +41,10 @@ const router = createRouter({
           path: 'tables',
           component: () => import('@/views/admin/TablesView.vue'),
         },
+        {
+          path: 'customers',
+          component: () => import('@/views/admin/CustomersView.vue'),
+        },
       ],
     },
     {
