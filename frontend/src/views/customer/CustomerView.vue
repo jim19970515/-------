@@ -12,6 +12,7 @@ import type { Category } from '@/types/menu'
 import type { Banner } from '@/types/banner'
 import AiAssistantChat from '@/components/customer/AiAssistantChat.vue'
 import type { SuggestedItem } from '@/composables/useAiAssistant'
+import foodPlaceholder from '@/assets/food-placeholder.svg'
 
 const route = useRoute()
 const cart = useCartStore()
@@ -137,7 +138,7 @@ async function submitOrder() {
 }
 
 function onImgError(e: Event) {
-  (e.target as HTMLImageElement).style.display = 'none'
+  (e.target as HTMLImageElement).src = foodPlaceholder
 }
 
 onMounted(() => {
@@ -308,13 +309,11 @@ onMounted(() => {
               style="background: #F5EDE6"
             >
               <img
-                v-if="item.image"
-                :src="item.image"
+                :src="item.image || foodPlaceholder"
                 :alt="item.name"
                 class="w-full h-full object-cover"
                 @error="onImgError"
               />
-              <span v-else class="text-xs select-none" style="color: #BCAAA4">暫無圖片</span>
             </div>
 
             <!-- 品項資訊 + 加減 -->
